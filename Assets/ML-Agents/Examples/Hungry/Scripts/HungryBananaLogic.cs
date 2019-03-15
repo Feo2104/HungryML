@@ -20,13 +20,21 @@ public class HungryBananaLogic : MonoBehaviour {
     public void OnEaten() {
         if (respawn) 
         {
-            transform.position = new Vector3(Random.Range(-myArea.range, myArea.range), 
-                                             transform.position.y + 3f, 
-                                             Random.Range(-myArea.range, myArea.range));
+            OnRespawn();
         }
         else 
         {
-            Destroy(gameObject);
+            OnHide();
         }
+    }
+
+    public void OnRespawn()
+    {
+        transform.position = myArea.GetRandomPositionInArea() + Vector3.up * 2f;
+    }
+
+    public void OnHide()
+    {
+        gameObject.SetActive(false);
     }
 }

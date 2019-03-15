@@ -5,28 +5,19 @@ using MLAgents;
 
 public class HungryAgent : Agent
 {
+    public int MAX_DETECTABLE_OBJECTS = 20;
     private HungryAcademy myAcademy;
     public GameObject area;
     HungryBananaArea myArea;
-    bool frozen;
-    bool poisioned;
-    bool satiated;
-    bool shoot;
-    float frozenTime;
-    float effectTime;
     Rigidbody agentRb;
     private int bananas;
-
-    // Speed of agent rotation.
-    public float turnSpeed = 300;
-
+    
     // Speed of agent movement.
     public float moveSpeed = 2;
     public Material normalMaterial;
     public Material badMaterial;
     public Material goodMaterial;
     public Material frozenMaterial;
-    public GameObject myLaser;
     public bool contribute;
     private RayPerception rayPer;
     public bool useVectorObs;
@@ -45,15 +36,43 @@ public class HungryAgent : Agent
     {
         if (useVectorObs)
         {
-            float rayDistance = 50f;
-            float[] rayAngles = { 20f, 90f, 160f, 45f, 135f, 70f, 110f };
-            string[] detectableObjects = { "banana", "agent", "wall" };
-            AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 0f, 0f));
+            int objNumber = 0;
+            while (objNumber < MAX_DETECTABLE_OBJECTS)
+            {
+                for (int i = 0; i < myArea.listWalls.Count; i++)
+                {
+                    if (!myArea.listWalls[i].gameObject.activeSelf) continue;
+                    Vector3 dirToTarget = myArea.listWalls[i].transform.position - this.transform.position;
+                    dirToTarget.y = 0;
+
+                    float angle = Vector2.SignedAngle(new Vector2(dirToTarget.x, dirToTarget.z), new Vector2(this.transform.forward.x, this.transform.forward.z));
+                    float distance = dirToTarget.magnitude;
+                    AddVectorObs(new float[] { (float)DETECTABLE_OBJECTS.Wall, angle, distance });
+                    objNumber++;
+                }
+
+                for (int i = 0; i < myArea.listBananas.Count; i++)
+                {
+                    if (!myArea.listBananas[i].gameObject.activeSelf) continue;
+                    Vector3 dirToTarget = myArea.listBananas[i].transform.position - this.transform.position;
+                    dirToTarget.y = 0;
+
+                    float angle = Vector2.SignedAngle(new Vector2(dirToTarget.x, dirToTarget.z), new Vector2(this.transform.forward.x, this.transform.forward.z));
+                    float distance = dirToTarget.magnitude;
+                    AddVectorObs(new float[] { (float)DETECTABLE_OBJECTS.Banana, angle, distance });
+                    objNumber++;
+                }
+
+                for (int i = 0; i < MAX_DETECTABLE_OBJECTS; i++)
+                {
+                    AddVectorObs(new float[] { (float)DETECTABLE_OBJECTS.None, 0, 0});
+                    objNumber++;
+                }
+            }
+
             Vector3 localVelocity = transform.InverseTransformDirection(agentRb.velocity);
             AddVectorObs(localVelocity.x);
             AddVectorObs(localVelocity.z);
-            //AddVectorObs(System.Convert.ToInt32(frozen));
-            //AddVectorObs(System.Convert.ToInt32(shoot));
         }
     }
 
@@ -67,178 +86,64 @@ public class HungryAgent : Agent
 
     public void MoveAgent(float[] act)
     {
-        shoot = false;
-
-        if (Time.time > frozenTime + 4f && frozen)
-        {
-            Unfreeze();
-        }
-        if (Time.time > effectTime + 0.5f)
-        {
-            if (poisioned)
-            {
-                Unpoison();
-            }
-            if (satiated)
-            {
-                Unsatiate();
-            }
-        }
 
         Vector3 dirToGo = Vector3.zero;
-        Vector3 rotateDir = Vector3.zero;
-
-        if (!frozen)
+        Vector2 rotateDir = Vector3.zero;
+        if (brain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
         {
-            bool shootCommand = false;
-            if (brain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
-            {
-                dirToGo = transform.forward * Mathf.Clamp(act[0], -1f, 1f);
-                rotateDir = transform.up * Mathf.Clamp(act[1], -1f, 1f);
-                //shootCommand = Mathf.Clamp(act[2], -1f, 1f) > 0.5f;
-            }
-            else
-            {
-                var forwardAxis = (int)act[0];
-                var rightAxis = (int)act[1];
-                var rotateAxis = (int)act[2];
-                var shootAxis = (int)act[3];
-
-                switch (forwardAxis)
-                {
-                    case 1:
-                        dirToGo = transform.forward;
-                        break;
-                    case 2:
-                        dirToGo = -transform.forward;
-                        break;
-                }
-
-                switch (rightAxis)
-                {
-                    case 1:
-                        dirToGo = transform.right;
-                        break;
-                    case 2:
-                        dirToGo = -transform.right;
-                        break;
-                }
-
-                switch (rotateAxis)
-                {
-                    case 1:
-                        rotateDir = -transform.up;
-                        break;
-                    case 2:
-                        rotateDir = transform.up;
-                        break;
-                }
-                switch (shootAxis)
-                {
-                    case 1:
-                        shootCommand = true;
-                        break;
-                }
-            }
-            if (shootCommand)
-            {
-                shoot = true;
-                dirToGo *= 0.5f;
-                agentRb.velocity *= 0.75f;
-            }
-            agentRb.AddForce(dirToGo * moveSpeed, ForceMode.VelocityChange);
-            transform.Rotate(rotateDir, Time.fixedDeltaTime * turnSpeed);
+            dirToGo = new Vector3(Mathf.Clamp(act[1], -1f, 1f), 0, Mathf.Clamp(act[0], -1f, 1f));
+            dirToGo.Normalize();
         }
+        else
+        {
+            var forwardAxis = (int)act[0];
+            var rotateAxis = (int)act[1];
+
+            switch (forwardAxis)
+            {
+                case 1:
+                    dirToGo = transform.forward;
+                    break;
+                case 2:
+                    dirToGo = Vector3.zero;
+                    break;
+            }
+
+            switch (rotateAxis)
+            {
+                case 1:
+                    rotateDir = -transform.up;
+                    break;
+                case 2:
+                    rotateDir = transform.up;
+                    break;
+                case 3:
+                    rotateDir = Vector3.zero;
+                    break;
+            }
+        }
+        agentRb.AddForce(dirToGo * moveSpeed, ForceMode.VelocityChange);
+        //transform.LookAt(transform.position + dirToGo);
+        transform.Rotate(rotateDir, Time.fixedDeltaTime * 300f);
 
         if (agentRb.velocity.sqrMagnitude > 25f) // slow it down
         {
             agentRb.velocity *= 0.95f;
         }
-
-        if (shoot)
-        {
-            myLaser.transform.localScale = new Vector3(1f, 1f, 1f);
-            Vector3 position = transform.TransformDirection(RayPerception.PolarToCartesian(25f, 90f));
-            Debug.DrawRay(transform.position, position, Color.red, 0f, true);
-            RaycastHit hit;
-            if (Physics.SphereCast(transform.position, 2f, position, out hit, 25f))
-            {
-                if (hit.collider.gameObject.CompareTag("agent"))
-                {
-                    hit.collider.gameObject.GetComponent<HungryAgent>().Freeze();
-                }
-            }
-        }
-        else
-        {
-            myLaser.transform.localScale = new Vector3(0f, 0f, 0f);
-
-        }
     }
-
-
-    void Freeze()
-    {
-        gameObject.tag = "frozenAgent";
-        frozen = true;
-        frozenTime = Time.time;
-        gameObject.GetComponent<Renderer>().material = frozenMaterial;
-    }
-
-
-    void Unfreeze()
-    {
-        frozen = false;
-        gameObject.tag = "agent";
-        gameObject.GetComponent<Renderer>().material = normalMaterial;
-    }
-
-    void Poison()
-    {
-        poisioned = true;
-        effectTime = Time.time;
-        gameObject.GetComponent<Renderer>().material = badMaterial;
-    }
-
-    void Unpoison()
-    {
-        poisioned = false;
-        gameObject.GetComponent<Renderer>().material = normalMaterial;
-    }
-
-    void Satiate()
-    {
-        satiated = true;
-        effectTime = Time.time;
-        gameObject.GetComponent<Renderer>().material = goodMaterial;
-    }
-
-    void Unsatiate()
-    {
-        satiated = false;
-        gameObject.GetComponent<Renderer>().material = normalMaterial;
-    }
-
 
 
     public override void AgentAction(float[] vectorAction, string textAction)
     {
-        AddReward(-0.05f*Time.fixedDeltaTime);
+        AddReward(-0.001f);
         MoveAgent(vectorAction);
     }
 
     public override void AgentReset()
     {
-        Unfreeze();
-        Unpoison();
-        Unsatiate();
-        shoot = false;
         agentRb.velocity = Vector3.zero;
         bananas = 0;
-        myLaser.transform.localScale = new Vector3(0f, 0f, 0f);
-        transform.position = new Vector3(Random.Range(-myArea.range, myArea.range),
-                                         2f, Random.Range(-myArea.range, myArea.range))
-            + area.transform.position;
+        transform.position = myArea.GetRandomPositionInArea() + Vector3.up * 2f;
         transform.rotation = Quaternion.Euler(new Vector3(0f, Random.Range(0, 360)));
     }
 
@@ -246,7 +151,6 @@ public class HungryAgent : Agent
     {
         if (collision.gameObject.CompareTag("banana"))
         {
-            Satiate();
             collision.gameObject.GetComponent<HungryBananaLogic>().OnEaten();
             AddReward(1f);
             bananas += 1;
@@ -255,16 +159,11 @@ public class HungryAgent : Agent
                 myAcademy.totalScore += 1;
             }
         }
-        if (collision.gameObject.CompareTag("badBanana"))
-        {
-            Poison();
-            collision.gameObject.GetComponent<HungryBananaLogic>().OnEaten();
 
+        if (collision.gameObject.CompareTag("wall"))
+        {
             AddReward(-1f);
-            if (contribute)
-            {
-                myAcademy.totalScore -= 1;
-            }
+            //Done();
         }
     }
 

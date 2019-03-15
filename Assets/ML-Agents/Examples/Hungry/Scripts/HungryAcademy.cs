@@ -15,8 +15,8 @@ public class HungryAcademy : Academy
     public Text scoreText;
     public override void AcademyReset()
     {
-        ClearObjects(GameObject.FindGameObjectsWithTag("banana"));
-        ClearObjects(GameObject.FindGameObjectsWithTag("badBanana"));
+        //ClearObjects(GameObject.FindGameObjectsWithTag("banana"));
+        //ClearObjects(GameObject.FindGameObjectsWithTag("badBanana"));
 
         agents = GameObject.FindGameObjectsWithTag("agent");
         listArea = FindObjectsOfType<HungryBananaArea>();
