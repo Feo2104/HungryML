@@ -104,9 +104,6 @@ public class HungryAgent : Agent
                 case 1:
                     dirToGo = transform.forward;
                     break;
-                case 2:
-                    dirToGo = Vector3.zero;
-                    break;
             }
 
             switch (rotateAxis)
@@ -116,9 +113,6 @@ public class HungryAgent : Agent
                     break;
                 case 2:
                     rotateDir = transform.up;
-                    break;
-                case 3:
-                    rotateDir = Vector3.zero;
                     break;
             }
         }
