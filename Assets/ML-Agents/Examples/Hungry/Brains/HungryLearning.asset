@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: HungryLearning
   m_EditorClassIdentifier: 
   brainParameters:
-    vectorObservationSize: 116
+    vectorObservationSize: 63
     numStackedVectorObservations: 1
     vectorActionSize: 0200000003000000
     cameraResolutions: []

@@ -39,17 +39,18 @@ public class HungryAgent : Agent
             int objNumber = 0;
             while (objNumber < MAX_DETECTABLE_OBJECTS)
             {
-                for (int i = 0; i < myArea.listWalls.Count; i++)
-                {
-                    if (!myArea.listWalls[i].gameObject.activeSelf) continue;
-                    Vector3 dirToTarget = myArea.listWalls[i].transform.position - this.transform.position;
-                    dirToTarget.y = 0;
+                //for (int i = 0; i < myArea.listWalls.Count; i++)
+                //{
+                //    if (!myArea.listWalls[i].gameObject.activeSelf) continue;
+                //    Vector3 dirToTarget = myArea.listWalls[i].transform.position - this.transform.position;
+                //    dirToTarget.y = 0;
 
-                    float angle = Vector2.SignedAngle(new Vector2(dirToTarget.x, dirToTarget.z), new Vector2(this.transform.forward.x, this.transform.forward.z));
-                    float distance = dirToTarget.magnitude;
-                    AddVectorObs(new float[] { (float)DETECTABLE_OBJECTS.Wall, angle, distance });
-                    objNumber++;
-                }
+                //    float angle = Vector2.SignedAngle(new Vector2(dirToTarget.x, dirToTarget.z), new Vector2(this.transform.forward.x, this.transform.forward.z));
+                //    float distance = dirToTarget.magnitude;
+                //    AddVectorObs(new float[] { (float)DETECTABLE_OBJECTS.Wall, angle, distance });
+                //    objNumber++;
+                //    if (objNumber > MAX_DETECTABLE_OBJECTS) return;
+                //}
 
                 for (int i = 0; i < myArea.listBananas.Count; i++)
                 {
@@ -61,12 +62,14 @@ public class HungryAgent : Agent
                     float distance = dirToTarget.magnitude;
                     AddVectorObs(new float[] { (float)DETECTABLE_OBJECTS.Banana, angle, distance });
                     objNumber++;
+                    if (objNumber > MAX_DETECTABLE_OBJECTS) return;
                 }
 
                 for (int i = 0; i < MAX_DETECTABLE_OBJECTS; i++)
                 {
                     AddVectorObs(new float[] { (float)DETECTABLE_OBJECTS.None, 0, 0});
                     objNumber++;
+                    if (objNumber > MAX_DETECTABLE_OBJECTS) return;
                 }
             }
 
@@ -156,7 +159,7 @@ public class HungryAgent : Agent
 
         if (collision.gameObject.CompareTag("wall"))
         {
-            AddReward(-1f);
+            //AddReward(-1f);
             //Done();
         }
     }
