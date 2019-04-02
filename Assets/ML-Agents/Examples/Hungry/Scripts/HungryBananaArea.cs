@@ -4,10 +4,9 @@ using UnityEngine;
 using MLAgents;
 public enum DETECTABLE_OBJECTS
 {
-    None = 0,
     Banana,
-    Wall,
-    Agent
+    Agent,
+    None
 }
 public class HungryBananaArea : Area
 {

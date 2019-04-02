@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 54832288766687748}
   - component: {fileID: 65445686293066652}
   - component: {fileID: 114191538972118430}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: HungryBanana
   m_TagString: banana
   m_Icon: {fileID: 0}
